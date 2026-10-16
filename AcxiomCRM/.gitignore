@@ -1,0 +1,26 @@
+## Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Environment & Secrets
+.env
+*.env.local
+
+## OS generated
+.DS_Store
+Thumbs.db
+
+## Node / Frontend
+node_modules/
+dist/
+build/

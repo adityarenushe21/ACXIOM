@@ -1,0 +1,46 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/azure-sql-edge:latest
+    container_name: acxiomcrm-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:-Your_strong_password123!}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"${MSSQL_SA_PASSWORD:-Your_strong_password123!}\" -Q \"SELECT 1\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: acxiomcrm-api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=AcxiomCrmDb;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Your_strong_password123!};TrustServerCertificate=True;MultipleActiveResultSets=true;
+      - Cors__AllowedOrigins__0=http://localhost:5173
+      - Cors__AllowedOrigins__1=http://localhost:3000
+      - SEED_ADMIN_EMAIL=${SEED_ADMIN_EMAIL:-admin@acxiomcrm.local}
+      - SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD:-CrmDev@2024Secure!}
+      - SEED_MANAGER_EMAIL=${SEED_MANAGER_EMAIL:-manager@acxiomcrm.local}
+      - SEED_MANAGER_PASSWORD=${SEED_MANAGER_PASSWORD:-CrmDev@2024Secure!}
+      - SEED_SALES_EMAIL=${SEED_SALES_EMAIL:-sales@acxiomcrm.local}
+      - SEED_SALES_PASSWORD=${SEED_SALES_PASSWORD:-CrmDev@2024Secure!}
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+
+volumes:
+  sqlserver-data:
+    driver: local
